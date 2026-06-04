@@ -1,301 +1,239 @@
-# ai_agent_test
+# SupportIQ — AI-Powered Customer Support & Knowledge Assistant
 
-My FastAPI project
+> A production-ready, full-stack AI platform that delivers intelligent customer support through a RAG-backed knowledge base, multi-channel messaging (Telegram + Slack), real-time streaming chat, and enterprise-grade billing — all orchestrated by a PydanticAI agent.
 
-> Generated with [Full-Stack AI Agent Template](https://github.com/vstorm-co/full-stack-ai-agent-template).
-
----
-
-## Stack
-
-| Component | Technology |
-|-----------|-----------|
-| **Backend** | FastAPI + Pydantic v2 |
-| **Database** | PostgreSQL (async via asyncpg) |
-| **Auth** | JWT + refresh tokens + API keys + OAuth |
-| **Cache** | Redis |
-| **AI Framework** | pydantic_ai (openai) |
-| **RAG** | milvus vector store |
-| **Tasks** | celery |
-| **Frontend** | Next.js 15 + React 19 + Tailwind v4 |
-| **Billing** | Stripe |
+[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.135+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## Prerequisites
+## ✨ Features
+
+| Category | Capabilities |
+|---|---|
+| 🤖 **AI Agent** | PydanticAI + OpenAI (GPT-4/o-series), streaming responses, extended thinking mode, web search, web fetch, chart generation |
+| 📚 **RAG Pipeline** | Milvus vector store, OpenAI embeddings, BM25 hybrid search, PDF/DOCX/Drive/S3 ingestion, cited answers |
+| 💬 **Multi-Channel** | Telegram bot (polling + webhook), Slack (Socket Mode + Events API), unified conversation history |
+| 🔐 **Auth** | JWT + refresh tokens, API key auth, Google OAuth2 (Sign in with Google) |
+| 📊 **Billing** | Stripe subscriptions + webhooks, credit system, per-user usage metering |
+| ⚡ **Task Queue** | Celery + Redis for async jobs (scheduled sync, email, heavy ingestion), Flower monitoring |
+| 🧩 **Knowledge Base** | Multi-collection RAG, Google Drive sync, S3/MinIO sync, OCR support |
+| 🌐 **Frontend** | Next.js 15 + React 19 + Tailwind v4, real-time WebSocket chat, i18n (EN/PL), Zustand |
+| 📈 **Observability** | Logfire tracing, PII redaction, structured logging, request correlation IDs |
+| 🐳 **Infrastructure** | Docker Compose (dev/staging/prod), Nginx reverse proxy, Traefik TLS |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         Frontend (Next.js 15)                   │
+│  WebSocket Chat · Knowledge Base UI · Billing · Admin Dashboard │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │ HTTP / WebSocket
+┌───────────────────────────▼─────────────────────────────────────┐
+│                      FastAPI Backend (Python 3.12)               │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │
+│  │  PydanticAI  │  │  RAG Engine  │  │  Auth / Billing      │   │
+│  │  Agent       │  │  (Milvus +   │  │  (JWT + Stripe)      │   │
+│  │  + Tools     │  │   BM25)      │  │                      │   │
+│  └──────┬───────┘  └──────┬───────┘  └──────────────────────┘   │
+│         │                 │                                      │
+│  ┌──────▼─────────────────▼──────────────────────────────────┐  │
+│  │           Repositories / Services / Celery Workers         │  │
+│  └──────────────────────────────┬─────────────────────────────┘  │
+└─────────────────────────────────┼────────────────────────────────┘
+                                  │
+         ┌────────────────────────┼──────────────────────┐
+         ▼                        ▼                       ▼
+   PostgreSQL 16             Redis 7                 Milvus 2.6
+   (async SQLAlchemy)        (cache + Celery)        (vector store)
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
 
 | Tool | Version | Install |
 |---|---|---|
-| **Docker** | Desktop / Engine 24+ | <https://docs.docker.com/get-docker/> |
-| **Make** | GNU Make 3.81+ (preinstalled on macOS/Linux) | Windows: install via [chocolatey](https://chocolatey.org/) `choco install make` or use WSL2 |
+| **Docker** | 24+ | [docs.docker.com](https://docs.docker.com/get-docker/) |
+| **Make** | GNU 3.81+ | Pre-installed on macOS/Linux |
 | **uv** | latest | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| **bun** | 1.x | `curl -fsSL https://bun.sh/install \| bash` (or use `npm` / `pnpm` if you prefer) |
+| **bun** | 1.x | `curl -fsSL https://bun.sh/install \| bash` |
 
-> **Windows users:** the Makefile and shell helpers assume bash. Use **WSL2** or **Git Bash** for the smoothest experience. The Docker workflow below works identically on macOS, Linux, and WSL2.
-
----
-
-## Quick Start (Local Dev)
-
-### First time
+### First-Time Setup
 
 ```bash
-make bootstrap       # = make dev + make seed
+# 1. Clone the repo
+git clone https://github.com/devkhurana02/supportiq.git
+cd supportiq
+
+# 2. Copy and configure environment variables
+cp backend/.env.example backend/.env
+# Edit backend/.env — set OPENAI_API_KEY at minimum (see Configuration below)
+
+# 3. Bootstrap the full stack (build images, start services, run migrations, seed admin)
+make bootstrap
 ```
 
-That's the only command you need on a fresh clone. After this, day-to-day is just `make dev`.
+**Access the running stack:**
 
-### Subsequent runs
+| Service | URL |
+|---|---|
+| API (Swagger UI) | http://localhost:8000/docs |
+| Admin Panel | http://localhost:8000/admin — `admin@example.com` / `admin123` |
+| Frontend | http://localhost:3000 (run `make dev-frontend`) |
+| Flower (Celery) | http://localhost:5555 |
+| Milvus | localhost:19530 |
 
-```bash
-make dev
-```
-
-`make dev` is **idempotent** — re-run it any time. It will:
-
-1. Build the backend Docker image (cached after first run)
-2. Start services via `docker-compose.dev.yml` (with hot-reload bind mounts)
-3. Poll Postgres until it accepts connections (`pg_isready` — no fixed sleeps)
-4. Apply pending Alembic migrations (no-op if already at head)
-
-It does **not** re-seed the admin user — that lives in `make seed` and is run once. This way `make dev` stays cheap to re-run after every code/config change.
-
-**Then access:**
-
-- API: <http://localhost:8000>
-- Docs: <http://localhost:8000/docs>
-- Admin: <http://localhost:8000/admin> — `admin@example.com` / `admin123` after `make seed`
-- Frontend: <http://localhost:3000> — start with `make dev-frontend` (Docker) or `cd frontend && bun install && bun dev` (local)
-
-### Day-to-day commands
+### Day-to-Day Development
 
 ```bash
-make dev           # bootstrap or restart (idempotent, no admin re-seed)
-make seed          # one-shot admin creation (no-op if admin already exists)
-make dev-down      # stop everything
-make dev-logs      # tail logs (Ctrl-C to exit)
-make dev-rebuild   # force-rebuild backend image (after pyproject.toml change)
-make dev-frontend  # start the Next.js container
-```
-
-If you prefer running the backend on the host (not in Docker) — useful for breakpoints / IDE debugging:
-
-```bash
-make install       # uv sync + pre-commit install
-docker compose -f docker-compose.dev.yml up -d db redis milvus etcd minio
-make db-upgrade    # apply migrations
-make run           # run uvicorn locally with --reload
+make dev           # Start / restart dev stack (idempotent)
+make dev-down      # Stop all services
+make dev-logs      # Tail logs
+make dev-frontend  # Start Next.js container
+make dev-rebuild   # Force-rebuild backend image
 ```
 
 ---
 
-## Environments
+## ⚙️ Configuration
 
-| `make` target | Compose file | Use case |
-|---|---|---|
-| `make dev` | `docker-compose.dev.yml` | Local development with hot-reload + bind-mounted source. |
-| `make stage` | `docker-compose.yml` | Production-like build, no bind mounts, runs on localhost. Good for sanity-checking before deploy. |
-| `make prod` | `docker-compose.prod.yml` | Production. Requires `backend/.env` (copy from `backend/.env.example`, fill real secrets) and an external Nginx using `nginx/nginx.conf`. |
-
-Each env has matching `-down`, `-logs`, `-rebuild` siblings (e.g. `make stage-down`).
-
----
-
-## Project Structure
-
-```
-backend/app/
-├── main.py               # FastAPI app + lifespan
-├── api/
-│   ├── deps.py           # Annotated DI aliases (DBSession, CurrentUser, *Svc)
-│   ├── exception_handlers.py
-│   └── routes/v1/        # HTTP endpoints — call services, never repos
-├── core/
-│   ├── config.py         # pydantic-settings (reads .env)
-│   ├── security.py       # JWT, bcrypt, API key verification
-│   ├── exceptions.py     # AppException → NotFound / Auth / etc.
-│   └── middleware.py
-├── db/
-│   ├── base.py           # DeclarativeBase + TimestampMixin
-│   └── models/           # SQLAlchemy models (Mapped[] type hints)
-├── schemas/              # Pydantic v2: *Create / *Update / *Read / *List
-├── repositories/         # Data access — db.flush() never commit
-├── services/             # Business logic — raises domain exceptions
-├── agents/               # AI agent wrappers + tools
-├── rag/                  # RAG: vectorstore + embeddings + ingestion + sources
-│   └── connectors/       # Pluggable sync sources (Google Drive, S3, …)
-├── worker/
-│   ├── background/       # FastAPI BackgroundTasks fallback (in-process)
-│   └── tasks/            # Distributed tasks (celery)
-└── commands/             # Click CLI commands (auto-discovered by `ai_agent_test cmd …`)
-
-frontend/src/
-├── app/
-│   ├── [locale]/         # next-intl routes (en/pl)
-│   │   ├── (marketing)/  # Public landing, pricing, FAQ, blog
-│   │   └── (dashboard)/  # Authenticated app
-│   └── api/              # Server-side API proxies (forward auth cookies)
-├── components/           # React components (chat, marketing, ui primitives)
-├── hooks/                # useAuth, useChat, useConversations, …
-├── stores/               # Zustand stores
-└── lib/                  # api-client, server-api, utils
-```
-
----
-
-## CLI
-
-The generated project ships a Click CLI exposed as `ai_agent_test` (after `make install`):
+All backend config lives in `backend/.env`. Key variables:
 
 ```bash
-ai_agent_test server run --reload          # dev server
-ai_agent_test db upgrade                   # apply migrations
-ai_agent_test db migrate -m "message"      # create new migration
-ai_agent_test user create-admin            # interactive admin creation
-ai_agent_test rag-ingest <path> -c docs    # ingest local files
-ai_agent_test rag-search "query" -c docs   # semantic search
-ai_agent_test rag-collections              # list collections
-ai_agent_test celery worker                # start worker
-ai_agent_test celery beat                  # start scheduler
-```
+# Required
+OPENAI_API_KEY=sk-...          # OpenAI API key (agent + embeddings)
+SECRET_KEY=<openssl rand -hex 32>
 
-Run `make help` for a categorized list, or `ai_agent_test --help` for full CLI docs.
-
----
-
-## Configuration
-
-All backend config lives in `backend/.env` (committed for dev defaults). Key variables:
-
-```bash
+# Database (pre-configured for Docker dev)
 POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
-POSTGRES_DB=ai_agent_test
+POSTGRES_DB=supportiq
 
-# OpenAI — required for chat + embeddings
-OPENAI_API_KEY=sk-…
-
-# Google OAuth (Sign in with Google)
-GOOGLE_CLIENT_ID=…
-GOOGLE_CLIENT_SECRET=…
-
-# Stripe billing
-STRIPE_SECRET_KEY=sk_test_…
-STRIPE_WEBHOOK_SECRET=whsec_…
-
-# Email (transactional + lifecycle)
-EMAIL_PROVIDER=resend
-RESEND_API_KEY=re_…
-EMAIL_FROM=noreply@your-domain.com
+# Optional integrations
+GOOGLE_CLIENT_ID=...           # Google OAuth
+STRIPE_SECRET_KEY=sk_test_...  # Billing
+RESEND_API_KEY=re_...          # Transactional email
+TAVILY_API_KEY=...             # Web search tool
+SLACK_BOT_TOKEN=xoxb-...       # Slack integration
+TELEGRAM_WEBHOOK_BASE_URL=...  # Telegram (leave empty for polling)
 ```
 
-See `backend/.env.example` for the full list with comments.
-
-For production, **never** commit secrets — `backend/.env` is gitignored. Fill it with real values on the server (or inject them via your platform's secret manager: Doppler, AWS Secrets Manager, GitHub Actions secrets, etc.). The same `backend/.env` is used for dev and prod — there is no separate `.env.prod`.
+See [`ENV_VARS.md`](ENV_VARS.md) for the full annotated reference and [`MANUAL_STEPS.md`](MANUAL_STEPS.md) for one-time external service setup (Google OAuth, Stripe, Resend).
 
 ---
 
-## Development
+## 📁 Project Structure
 
-| Command | What it does |
-|---|---|
-| `make test` | Run pytest |
-| `make lint` | Run ruff check + format check + ty |
-| `make format` | Auto-format with ruff |
-| `make db-migrate` | Generate a new migration from model changes (interactive) |
-| `make db-upgrade` | Apply pending migrations |
-| `make db-downgrade` | Roll back one migration |
-| `make db-current` | Show current head |
-| `make create-admin` | Interactive admin creation |
-| `make user-list` | List all users |
-| `make celery-worker` | Run Celery worker locally |
-| `make celery-beat` | Run Celery beat |
-| `make celery-flower` | Open Flower UI at <http://localhost:5555> |
+```
+supportiq/
+├── backend/
+│   ├── app/
+│   │   ├── agents/          # PydanticAI agent, system prompts, tools
+│   │   ├── api/routes/v1/   # REST endpoints (auth, conversations, RAG, billing…)
+│   │   ├── core/            # Config, security, middleware, logging
+│   │   ├── db/              # SQLAlchemy models, session management
+│   │   ├── repositories/    # Data access layer (no commits, flush only)
+│   │   ├── services/        # Business logic + channel adapters (Telegram, Slack)
+│   │   ├── worker/          # Celery app, tasks, background jobs
+│   │   └── commands/        # Click CLI (db, user, RAG, celery)
+│   └── alembic/             # Database migrations
+├── frontend/
+│   └── src/
+│       ├── app/[locale]/    # Next.js routes (marketing + dashboard)
+│       ├── components/      # Chat UI, RAG panel, billing, admin
+│       ├── hooks/           # useAuth, useChat, useConversations
+│       └── stores/          # Zustand state management
+├── docker-compose.dev.yml   # Development stack
+├── docker-compose.yml       # Staging stack
+├── docker-compose.prod.yml  # Production stack (Traefik TLS)
+└── nginx/                   # Nginx reverse proxy config
+```
 
 ---
 
-## RAG (Knowledge Base)
-
-Using **milvus** as the vector store with **openai** embeddings.
+## 🛠️ Development Commands
 
 ```bash
-# Ingest local files (recursive)
-ai_agent_test rag-ingest /path/to/docs/ --collection documents --recursive
-# Pull from Google Drive (service-account auth)
-ai_agent_test rag-sync-gdrive --collection documents --folder-id <id>
-# Pull from S3 / MinIO
-ai_agent_test rag-sync-s3 --collection documents --prefix docs/
+# Code quality
+make lint          # ruff check + format check + ty type check
+make format        # Auto-format (ruff)
+make test          # Run pytest
 
-# Semantic search
-ai_agent_test rag-search "your query" --collection documents
+# Database
+make db-migrate    # Generate new Alembic migration
+make db-upgrade    # Apply pending migrations
+make db-downgrade  # Roll back one migration
+
+# RAG
+uv run supportiq rag-ingest /path/to/docs --collection support
+uv run supportiq rag-search "refund policy" --collection support
+uv run supportiq rag-collections
+
+# Users / Admin
+make create-admin
+make user-list
+
+# Celery
+make celery-worker
+make celery-beat
+make celery-flower   # Flower at http://localhost:5555
 ```
-
-PDF parsing uses **all**. See `docs/howto/add-rag-source.md` to add a new source connector.
 
 ---
 
-## Frontend
+## 🌍 Deployment
+
+### Backend — Docker (VPS / Cloud VM)
 
 ```bash
-cd frontend
-bun install
-bun dev          # http://localhost:3000
-bun run lint
-bun run build
+cp backend/.env.example backend/.env  # fill in production secrets
+make prod          # Traefik TLS + production Docker stack
+make prod-logs
 ```
 
-The frontend talks to the backend through Next.js API route handlers in `src/app/api/*` (server-side proxy that forwards auth cookies to the FastAPI backend). Direct calls to `localhost:8000` from the browser are deliberately avoided.
-
-i18n (PL + EN) ships out of the box via `next-intl`. Add a new locale by extending `messages/<lang>.json` and `src/i18n.ts`.
-
----
-
-## Deployment
-
-### Frontend → Vercel
+### Frontend — Vercel
 
 ```bash
 cd frontend && npx vercel --prod
 ```
 
-Set in the Vercel dashboard:
-
+Set in Vercel dashboard:
 - `BACKEND_URL` = `https://api.your-domain.com`
 - `BACKEND_WS_URL` = `wss://api.your-domain.com`
 - `NEXT_PUBLIC_AUTH_ENABLED` = `true`
 - `NEXT_PUBLIC_RAG_ENABLED` = `true`
 
-### Backend → your server
+---
 
-```bash
-# 1. SSH to the box, clone the repo
-# 2. cp backend/.env.example backend/.env, fill in real secrets
-# 3. Configure nginx using nginx/nginx.conf as reference
-# 4. Bring up the stack:
-make prod
+## 📚 Documentation
 
-# Day-to-day:
-make prod-logs
-make prod-down
-```
-
-Migrations run automatically on `make prod`. For a fresh deploy on a new host, the same `make prod` is the bootstrap command.
+| Guide | Topic |
+|---|---|
+| [`ENV_VARS.md`](ENV_VARS.md) | Full environment variable reference |
+| [`MANUAL_STEPS.md`](MANUAL_STEPS.md) | One-time setup (OAuth, Stripe, email, Milvus cloud) |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Architecture rules, code style, PR checklist |
+| [`SECURITY.md`](SECURITY.md) | Vulnerability reporting, security model |
+| [`docs/architecture.md`](docs/architecture.md) | Layered architecture deep-dive |
+| [`docs/howto/`](docs/howto/) | How-to guides (add endpoint, add tool, add RAG source…) |
 
 ---
 
-## Guides
+## 🤝 Contributing
 
-| Guide | What |
-|-------|-------|
-| `docs/howto/add-api-endpoint.md` | Add a new REST endpoint |
-| `docs/howto/add-agent-tool.md` | Create an agent tool |
-| `docs/howto/customize-agent-prompt.md` | Tune system prompts |
-| `docs/howto/add-background-task.md` | Add a background task |
-| `docs/howto/add-rag-source.md` | Add a RAG document source |
-| `docs/howto/add-sync-connector.md` | Build a custom sync connector |
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code style, architecture rules, and the PR checklist.
 
 ---
 
-*Generated with [Full-Stack AI Agent Template](https://github.com/vstorm-co/full-stack-ai-agent-template) v0.2.9.*
+## 📄 License
+
+MIT © [devkhurana02](https://github.com/devkhurana02)

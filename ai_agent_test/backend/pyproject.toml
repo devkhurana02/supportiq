@@ -1,11 +1,11 @@
 [project]
-name = "ai_agent_test"
-version = "0.1.0"
-description = "My FastAPI project"
+name = "supportiq"
+version = "1.0.0"
+description = "AI-Powered Customer Support & Knowledge Assistant — FastAPI + PydanticAI + Milvus RAG + Celery + Stripe"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [
-    { name = "Your Name", email = "your@email.com" },
+    { name = "devkhurana02", email = "devkhurana432@gmail.com" },
 ]
 
 dependencies = [
@@ -71,7 +71,7 @@ dev = [
 ]
 
 [project.scripts]
-ai_agent_test = "cli.commands:main"
+supportiq = "cli.commands:main"
 
 [build-system]
 requires = ["hatchling"]

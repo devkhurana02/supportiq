@@ -173,33 +173,36 @@ def create_app() -> FastAPI:
     setup_logging()
 
     app = FastAPI(
-        title=settings.PROJECT_NAME,
-        summary="FastAPI application with Logfire observability",
+        title="SupportIQ API",
+        summary="AI-Powered Customer Support & Knowledge Assistant",
         description="""
-My FastAPI project
+## SupportIQ
 
-## Features
-- **Authentication**: JWT-based authentication with refresh tokens
-- **API Key**: Header-based API key authentication
-- **Database**: Async database operations
-- **Redis**: Caching and session storage
-- **AI Agent**: PydanticAI-powered conversational assistant
-- **Observability**: Logfire integration for tracing and monitoring
-- **RAG**: Retrieval Augmented Generation with Milvus and LangChain
+An intelligent customer support platform powered by a PydanticAI agent with RAG-backed knowledge retrieval,
+multi-channel messaging (Telegram + Slack), real-time streaming chat, and enterprise-grade billing.
+
+## Core Features
+- **AI Agent**: PydanticAI + OpenAI (GPT-4/o-series) with streaming, extended thinking, web search, and chart tools
+- **RAG Pipeline**: Milvus vector store + BM25 hybrid search, PDF/DOCX/Drive/S3 ingestion, cited answers
+- **Multi-Channel**: Telegram (polling/webhook) and Slack (Socket Mode) with unified conversation history
+- **Auth**: JWT refresh tokens, API key auth, Google OAuth2
+- **Billing**: Stripe subscriptions, webhooks, per-user credit metering
+- **Observability**: Logfire tracing, PII redaction, structured logging
 
 ## Documentation
 
 - [Swagger UI](/docs) - Interactive API documentation
 - [ReDoc](/redoc) - Alternative documentation view
         """.strip(),
-        version="0.1.0",
+        version="1.0.0",
         openapi_url=openapi_url,
         docs_url=docs_url,
         redoc_url=redoc_url,
         openapi_tags=openapi_tags,
         contact={
-            "name": "Your Name",
-            "email": "your@email.com",
+            "name": "devkhurana02",
+            "email": "devkhurana432@gmail.com",
+            "url": "https://github.com/devkhurana02/supportiq",
         },
         license_info={
             "name": "MIT",

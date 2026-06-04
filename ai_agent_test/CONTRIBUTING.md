@@ -1,4 +1,4 @@
-# Contributing to ai_agent_test
+# Contributing to SupportIQ
 
 ## Development setup
 
